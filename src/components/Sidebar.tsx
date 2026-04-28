@@ -49,13 +49,8 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
               </Link>
             </li>
             <li>
-              <Link to="/products/all?filter=season" onClick={onClose} className="block rounded-md px-3 py-2 hover:bg-gray-100">
-                Seasonal
-              </Link>
-            </li>
-            <li>
-              <Link to="/products/all?filter=new" onClick={onClose} className="block rounded-md px-3 py-2 hover:bg-gray-100">
-                New Arrivals
+              <Link to="/products/all?filter=trending" onClick={onClose} className="block rounded-md px-3 py-2 hover:bg-gray-100">
+                Trending
               </Link>
             </li>
           </ul>

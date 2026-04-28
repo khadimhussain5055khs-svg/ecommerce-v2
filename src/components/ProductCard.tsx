@@ -3,6 +3,7 @@ import { Star, ShoppingCart } from 'lucide-react';
 import { Product } from '../data/products';
 import { useCart } from '../context/CartContext';
 import { ImageWithFallback } from './figma/ImageWithFallback';
+import { formatPKR } from '../lib/currency';
 
 interface ProductCardProps {
   product: Product;
@@ -47,7 +48,7 @@ export function ProductCard({ product }: ProductCardProps) {
           </div>
 
           <div className="mb-2">
-            <p className="text-2xl font-bold text-red-600">${product.price.toFixed(2)}</p>
+            <p className="text-2xl font-bold text-red-600">{formatPKR(product.price)}</p>
           </div>
 
           <div className="flex items-center justify-between text-sm text-gray-600 mb-3">
@@ -59,7 +60,7 @@ export function ProductCard({ product }: ProductCardProps) {
 
           <button
             onClick={handleAddToCart}
-            className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+            className="w-full bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center gap-2"
           >
             <ShoppingCart className="w-4 h-4" />
             Add to Cart

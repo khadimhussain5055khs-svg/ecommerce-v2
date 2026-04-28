@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useCatalog } from '../context/CatalogContext';
 import { ProductCard } from './ProductCard';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 
 export function HomePage() {
   const [currentAdIndex, setCurrentAdIndex] = useState(0);
-  const { products, advertisements } = useCatalog();
+  const { products, advertisements, sections } = useCatalog();
 
   useEffect(() => {
     if (advertisements.length === 0) return;
@@ -20,6 +21,9 @@ export function HomePage() {
   const trendingProducts = products.filter(p => p.isTrending).slice(0, 4);
   const mostSearchedProducts = products.filter(p => p.isMostSearched).slice(0, 4);
   const budgetFriendlyProducts = products.filter(p => p.isBudgetFriendly).slice(0, 4);
+  const homepageSections = sections
+    .filter((section) => section.isActive && section.showInHomepage)
+    .sort((a, b) => a.sortOrder - b.sortOrder);
 
   const nextAd = () => {
     if (advertisements.length === 0) return;
@@ -125,6 +129,26 @@ export function HomePage() {
           ))}
         </div>
       </section>
+
+      {homepageSections.map((section) => (
+        <section key={section.id} className="mb-12">
+          <div className="mb-6 flex items-center justify-between">
+            <h2 className="text-3xl font-bold">{section.name}</h2>
+            <Link to={`/sections/${section.slug}`} className="font-semibold text-red-600">
+              View More -
+            </Link>
+          </div>
+          {section.productIds.length > 0 ? (
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              {section.productIds.slice(0, 4).map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-500">No products added to this section.</p>
+          )}
+        </section>
+      ))}
     </div>
   );
 }

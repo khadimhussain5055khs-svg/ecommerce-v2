@@ -1,9 +1,6 @@
-import mongoose from 'mongoose';
-import { env } from './env.js';
+import { prisma } from '../lib/prisma.js';
 
 export async function connectDatabase() {
-  await mongoose.connect(env.MONGODB_URI, {
-    serverSelectionTimeoutMS: 10000,
-  });
-  console.log('MongoDB connected');
+  await prisma.$connect();
+  console.log('MySQL connected');
 }

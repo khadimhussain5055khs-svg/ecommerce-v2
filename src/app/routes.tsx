@@ -10,6 +10,7 @@ import { AdminDashboardPage } from "../components/AdminDashboardPage";
 import { ProtectedRoute } from "../components/ProtectedRoute";
 import { MyOrdersPage } from "../components/MyOrdersPage";
 import { NotFound } from "../components/NotFound";
+import { SectionPage } from "../components/SectionPage";
 
 export const router = createBrowserRouter([
   {
@@ -19,6 +20,7 @@ export const router = createBrowserRouter([
       { index: true, Component: HomePage },
       { path: "products/:category", Component: ProductListingPage },
       { path: "product/:id", Component: ProductDetailPage },
+      { path: "sections/:slug", Component: SectionPage },
       { path: "cart", Component: CartPage },
       {
         Component: ProtectedRoute,

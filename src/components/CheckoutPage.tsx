@@ -4,6 +4,7 @@ import { CreditCard, Smartphone, Banknote } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { apiRequest } from '../lib/api';
+import { formatPKR } from '../lib/currency';
 
 export function CheckoutPage() {
   const { items, totalPrice, clearCart } = useCart();
@@ -105,7 +106,7 @@ export function CheckoutPage() {
         amount: razorpay.amount,
         currency: razorpay.currency,
         name: 'PreLounge',
-        description: `Order #${checkoutResponse.order._id}`,
+        description: `Order #${checkoutResponse.order.id}`,
         order_id: razorpay.orderId,
         handler: async (response: any) => {
           await apiRequest('/orders/verify-razorpay', {
@@ -167,7 +168,7 @@ export function CheckoutPage() {
                   name="fullName"
                   value={formData.fullName}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                   required
                 />
               </div>
@@ -178,7 +179,7 @@ export function CheckoutPage() {
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                   required
                 />
               </div>
@@ -189,7 +190,7 @@ export function CheckoutPage() {
                   name="phone"
                   value={formData.phone}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                   required
                 />
               </div>
@@ -206,7 +207,7 @@ export function CheckoutPage() {
                   name="address"
                   value={formData.address}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                   required
                 />
               </div>
@@ -218,7 +219,7 @@ export function CheckoutPage() {
                     name="city"
                     value={formData.city}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                     required
                   />
                 </div>
@@ -229,7 +230,7 @@ export function CheckoutPage() {
                     name="state"
                     value={formData.state}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                     required
                   />
                 </div>
@@ -264,7 +265,7 @@ export function CheckoutPage() {
           <div className="bg-white border border-gray-200 rounded-lg p-6">
             <h2 className="text-2xl font-bold mb-6">Payment Method</h2>
             <div className="space-y-4">
-              <label className="flex items-center gap-4 p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-blue-500 transition-colors">
+              <label className="flex items-center gap-4 p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-red-500 transition-colors">
                 <input
                   type="radio"
                   name="payment"
@@ -280,7 +281,7 @@ export function CheckoutPage() {
                 </div>
               </label>
 
-              <label className="flex items-center gap-4 p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-blue-500 transition-colors">
+              <label className="flex items-center gap-4 p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-red-500 transition-colors">
                 <input
                   type="radio"
                   name="payment"
@@ -296,7 +297,7 @@ export function CheckoutPage() {
                 </div>
               </label>
 
-              <label className="flex items-center gap-4 p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-blue-500 transition-colors">
+              <label className="flex items-center gap-4 p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-red-500 transition-colors">
                 <input
                   type="radio"
                   name="payment"
@@ -322,7 +323,7 @@ export function CheckoutPage() {
                       value={cardDetails.cardNumber}
                       onChange={handleCardInputChange}
                       placeholder="1234 5678 9012 3456"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                       required={paymentMethod === 'credit'}
                     />
                   </div>
@@ -333,7 +334,7 @@ export function CheckoutPage() {
                       name="cardName"
                       value={cardDetails.cardName}
                       onChange={handleCardInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                       required={paymentMethod === 'credit'}
                     />
                   </div>
@@ -346,7 +347,7 @@ export function CheckoutPage() {
                         value={cardDetails.expiryDate}
                         onChange={handleCardInputChange}
                         placeholder="MM/YY"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                         required={paymentMethod === 'credit'}
                       />
                     </div>
@@ -358,7 +359,7 @@ export function CheckoutPage() {
                         value={cardDetails.cvv}
                         onChange={handleCardInputChange}
                         placeholder="123"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                         required={paymentMethod === 'credit'}
                       />
                     </div>
@@ -387,7 +388,7 @@ export function CheckoutPage() {
                     <p className="font-medium text-sm">{item.name}</p>
                     <p className="text-sm text-gray-600">Qty: {item.quantity}</p>
                     <p className="font-semibold text-red-600">
-                      ${(item.price * item.quantity).toFixed(2)}
+                      {formatPKR(item.price * item.quantity)}
                     </p>
                   </div>
                 </div>
@@ -397,7 +398,7 @@ export function CheckoutPage() {
             <div className="space-y-3 border-t pt-4">
               <div className="flex justify-between">
                 <span className="text-gray-600">Subtotal</span>
-                <span className="font-semibold">${totalPrice.toFixed(2)}</span>
+                <span className="font-semibold">{formatPKR(totalPrice)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Shipping</span>
@@ -405,13 +406,13 @@ export function CheckoutPage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Tax (10%)</span>
-                <span className="font-semibold">${(totalPrice * 0.1).toFixed(2)}</span>
+                <span className="font-semibold">{formatPKR(totalPrice * 0.1)}</span>
               </div>
               <div className="border-t pt-3">
                 <div className="flex justify-between">
                   <span className="text-xl font-bold">Total</span>
                   <span className="text-xl font-bold text-red-600">
-                    ${(totalPrice * 1.1).toFixed(2)}
+                    {formatPKR(totalPrice * 1.1)}
                   </span>
                 </div>
               </div>

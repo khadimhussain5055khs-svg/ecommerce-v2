@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { env } from '../config/env.js';
-import { User } from '../models/User.js';
+import { prisma } from '../lib/prisma.js';
 
 export async function authRequired(req, res, next) {
   try {
@@ -12,7 +12,10 @@ export async function authRequired(req, res, next) {
     }
 
     const payload = jwt.verify(token, env.JWT_SECRET);
-    const user = await User.findById(payload.userId).select('-passwordHash');
+    const user = await prisma.user.findUnique({
+      where: { id: payload.userId },
+      select: { id: true, name: true, email: true, role: true },
+    });
     if (!user) return res.status(401).json({ message: 'Unauthorized' });
     req.user = user;
     return next();

@@ -6,6 +6,7 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { ProductCard } from './ProductCard';
 import { ImageWithFallback } from './figma/ImageWithFallback';
+import { formatPKR } from '../lib/currency';
 
 export function ProductDetailPage() {
   const { id } = useParams();
@@ -98,7 +99,7 @@ export function ProductDetailPage() {
           </div>
 
           <div className="mb-6">
-            <p className="text-5xl font-bold text-red-600">${product.price.toFixed(2)}</p>
+            <p className="text-5xl font-bold text-red-600">{formatPKR(product.price)}</p>
           </div>
 
           <div className="mb-6">
@@ -120,7 +121,7 @@ export function ProductDetailPage() {
               {product.tags.map(tag => (
                 <span
                   key={tag}
-                  className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
+                  className="bg-red-50 text-red-700 px-3 py-1 rounded-full text-sm"
                 >
                   {tag}
                 </span>
@@ -150,7 +151,7 @@ export function ProductDetailPage() {
           <div className="flex gap-4">
             <button
               onClick={handleAddToCart}
-              className="flex-1 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+              className="flex-1 bg-red-600 text-white py-3 rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center gap-2"
             >
               <ShoppingCart className="w-5 h-5" />
               Add to Cart

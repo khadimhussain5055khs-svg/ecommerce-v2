@@ -1,9 +1,6 @@
 import bcrypt from 'bcryptjs';
 import { env } from '../config/env.js';
-import { User } from '../models/User.js';
-import { Product } from '../models/Product.js';
-import { Banner } from '../models/Banner.js';
-import { Category } from '../models/Category.js';
+import { prisma } from '../lib/prisma.js';
 
 const defaultCategories = [
   { name: 'Shoes', slug: 'shoes', description: 'All kinds of shoes' },
@@ -50,30 +47,27 @@ const defaultBanners = [
 
 export async function bootstrapData() {
   const ownerEmail = env.OWNER_EMAIL.toLowerCase();
-  const owner = await User.findOne({ email: ownerEmail });
+  const owner = await prisma.user.findUnique({ where: { email: ownerEmail } });
   if (!owner) {
     const passwordHash = await bcrypt.hash(env.OWNER_PASSWORD, 10);
-    await User.create({
-      name: env.OWNER_NAME,
-      email: ownerEmail,
-      passwordHash,
-      role: 'owner',
-    });
+    await prisma.user.create({ data: { name: env.OWNER_NAME, email: ownerEmail, passwordHash, role: 'owner' } });
     console.log('Owner user bootstrapped');
   }
 
-  if ((await Category.countDocuments()) === 0) {
-    await Category.insertMany(defaultCategories);
+  if ((await prisma.category.count()) === 0) {
+    await prisma.category.createMany({ data: defaultCategories });
     console.log('Default categories bootstrapped');
   }
 
-  if ((await Product.countDocuments()) === 0) {
-    await Product.insertMany(defaultProducts);
+  if ((await prisma.product.count()) === 0) {
+    await prisma.product.createMany({
+      data: defaultProducts.map((item) => ({ ...item, images: item.images, tags: item.tags })),
+    });
     console.log('Default products bootstrapped');
   }
 
-  if ((await Banner.countDocuments()) === 0) {
-    await Banner.insertMany(defaultBanners);
+  if ((await prisma.banner.count()) === 0) {
+    await prisma.banner.createMany({ data: defaultBanners });
     console.log('Default banners bootstrapped');
   }
 }

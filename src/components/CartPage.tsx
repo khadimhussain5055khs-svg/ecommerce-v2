@@ -3,6 +3,7 @@ import { Trash2, Plus, Minus } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { ImageWithFallback } from './figma/ImageWithFallback';
+import { formatPKR } from '../lib/currency';
 
 export function CartPage() {
   const { items, removeFromCart, updateQuantity, totalPrice, totalItems } = useCart();
@@ -58,7 +59,7 @@ export function CartPage() {
                   </Link>
                   <p className="text-gray-600 mt-2">{item.description}</p>
                   <p className="text-2xl font-bold text-red-600 mt-3">
-                    ${item.price.toFixed(2)}
+                    {formatPKR(item.price)}
                   </p>
                 </div>
 
@@ -99,7 +100,7 @@ export function CartPage() {
             <div className="space-y-3 mb-6">
               <div className="flex justify-between">
                 <span className="text-gray-600">Subtotal</span>
-                <span className="font-semibold">${totalPrice.toFixed(2)}</span>
+                <span className="font-semibold">{formatPKR(totalPrice)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Shipping</span>
@@ -107,13 +108,13 @@ export function CartPage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Tax</span>
-                <span className="font-semibold">${(totalPrice * 0.1).toFixed(2)}</span>
+                <span className="font-semibold">{formatPKR(totalPrice * 0.1)}</span>
               </div>
               <div className="border-t pt-3 mt-3">
                 <div className="flex justify-between">
                   <span className="text-xl font-bold">Total</span>
                   <span className="text-xl font-bold text-red-600">
-                    ${(totalPrice * 1.1).toFixed(2)}
+                    {formatPKR(totalPrice * 1.1)}
                   </span>
                 </div>
               </div>
@@ -128,7 +129,7 @@ export function CartPage() {
 
             <Link
               to="/"
-              className="block text-center text-blue-600 hover:underline"
+              className="block text-center text-red-600 hover:underline"
             >
               Continue Shopping
             </Link>

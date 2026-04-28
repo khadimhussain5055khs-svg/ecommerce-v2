@@ -1,8 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { Cart } from '../models/Cart.js';
-import { Product } from '../models/Product.js';
 import { authRequired } from '../middleware/auth.js';
+import { prisma } from '../lib/prisma.js';
 
 const router = Router();
 
@@ -14,33 +13,54 @@ const cartItemSchema = z.object({
 router.use(authRequired);
 
 async function getPopulatedCart(userId) {
-  const cart = await Cart.findOne({ userId }).populate('items.productId');
-  return cart;
+  return prisma.cart.findUnique({
+    where: { userId },
+    include: { items: { include: { product: true } } },
+  });
 }
 
 router.get('/', async (req, res) => {
-  const cart = await getPopulatedCart(req.user._id);
-  return res.json({ cart: cart ?? { userId: req.user._id, items: [] } });
+  const cart = await getPopulatedCart(req.user.id);
+  if (!cart) return res.json({ cart: { userId: req.user.id, items: [] } });
+  return res.json({
+    cart: {
+      ...cart,
+      items: cart.items.map((item) => ({ ...item, productId: item.product })),
+    },
+  });
 });
 
 router.put('/', async (req, res) => {
   const payload = z.array(cartItemSchema).parse(req.body.items);
-  const existing = await Cart.findOne({ userId: req.user._id });
+  const existing = await prisma.cart.findUnique({ where: { userId: req.user.id } });
   const items = [];
   for (const row of payload) {
-    const product = await Product.findById(row.productId);
-    if (product) items.push({ productId: product._id, quantity: row.quantity });
+    const product = await prisma.product.findUnique({ where: { id: row.productId } });
+    if (product) items.push({ productId: product.id, quantity: row.quantity });
   }
 
   const cart = existing
-    ? await Cart.findByIdAndUpdate(existing._id, { items }, { new: true })
-    : await Cart.create({ userId: req.user._id, items });
-  const populated = await Cart.findById(cart._id).populate('items.productId');
-  return res.json({ cart: populated });
+    ? await prisma.cart.update({ where: { id: existing.id }, data: { items: { deleteMany: {}, create: items } } })
+    : await prisma.cart.create({ data: { userId: req.user.id, items: { create: items } } });
+  const populated = await prisma.cart.findUnique({
+    where: { id: cart.id },
+    include: { items: { include: { product: true } } },
+  });
+  return res.json({
+    cart: {
+      ...populated,
+      items: (populated?.items ?? []).map((item) => ({ ...item, productId: item.product })),
+    },
+  });
 });
 
 router.delete('/', async (req, res) => {
-  await Cart.findOneAndUpdate({ userId: req.user._id }, { items: [] }, { upsert: true, new: true });
+  const existing = await prisma.cart.findUnique({ where: { userId: req.user.id } });
+  if (existing) {
+    await prisma.cartItem.deleteMany({ where: { cartId: existing.id } });
+  } else {
+    await prisma.cart.create({ data: { userId: req.user.id } });
+  }
   return res.status(204).send();
 });
 

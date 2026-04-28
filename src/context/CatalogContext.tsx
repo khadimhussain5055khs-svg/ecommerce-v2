@@ -1,10 +1,21 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import { advertisements as defaultAdvertisements, products as defaultProducts, type Advertisement, type Product } from '../data/products';
+import {
+  advertisements as defaultAdvertisements,
+  defaultSections,
+  defaultSiteSettings,
+  products as defaultProducts,
+  type Advertisement,
+  type Product,
+  type Section,
+  type SiteSettings,
+} from '../data/products';
 import { apiRequest } from '../lib/api';
 
 interface CatalogContextType {
   products: Product[];
   advertisements: Advertisement[];
+  sections: Section[];
+  siteSettings: SiteSettings;
   loading: boolean;
   addProduct: (product: Omit<Product, 'id'>) => Promise<void>;
   updateProduct: (productId: string, changes: Partial<Product>) => Promise<void>;
@@ -12,6 +23,10 @@ interface CatalogContextType {
   addAdvertisement: (advertisement: Omit<Advertisement, 'id'>) => Promise<void>;
   updateAdvertisement: (advertisementId: string, changes: Partial<Advertisement>) => Promise<void>;
   deleteAdvertisement: (advertisementId: string) => Promise<void>;
+  addSection: (section: Omit<Section, 'id'>) => Promise<void>;
+  updateSection: (sectionId: string, changes: Partial<Section>) => Promise<void>;
+  deleteSection: (sectionId: string) => Promise<void>;
+  updateSiteSettings: (changes: Partial<SiteSettings>) => Promise<void>;
   refreshCatalog: () => Promise<void>;
 }
 
@@ -21,6 +36,8 @@ const CatalogContext = createContext<CatalogContextType | undefined>(undefined);
 export function CatalogProvider({ children }: { children: ReactNode }) {
   const [products, setProducts] = useState<Product[]>(defaultProducts);
   const [advertisements, setAdvertisements] = useState<Advertisement[]>(defaultAdvertisements);
+  const [sections, setSections] = useState<Section[]>(defaultSections);
+  const [siteSettings, setSiteSettings] = useState<SiteSettings>(defaultSiteSettings);
   const [loading, setLoading] = useState(true);
 
   const getToken = () => localStorage.getItem(TOKEN_STORAGE_KEY);
@@ -51,20 +68,47 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     cta: ad.cta ?? 'Shop Now',
   });
 
+  const toSection = (section: any): Section => ({
+    id: String(section._id ?? section.id),
+    name: section.name,
+    slug: section.slug,
+    description: section.description ?? '',
+    image: section.image ?? '',
+    showInHeader: !!section.showInHeader,
+    showInHomepage: !!section.showInHomepage,
+    isActive: section.isActive !== false,
+    sortOrder: section.sortOrder ?? 0,
+    productIds: (section.productIds ?? []).map(toProduct),
+  });
+
+  const toSiteSettings = (settings: any): SiteSettings => ({
+    headerDealsImage: settings?.headerDealsImage ?? '',
+    headerDealsText: settings?.headerDealsText ?? defaultSiteSettings.headerDealsText,
+    footerText: settings?.footerText ?? defaultSiteSettings.footerText,
+    footerLinks: settings?.footerLinks?.length ? settings.footerLinks : defaultSiteSettings.footerLinks,
+  });
+
   const refreshCatalog = async () => {
     setLoading(true);
     try {
-      const [productsResponse, bannersResponse] = await Promise.all([
+      const [productsResponse, bannersResponse, sectionsResponse, settingsResponse] = await Promise.all([
         apiRequest<{ products: any[] }>('/catalog/products'),
         apiRequest<{ banners: any[] }>('/catalog/banners'),
+        apiRequest<{ sections: any[] }>('/catalog/sections'),
+        apiRequest<{ settings: any }>('/catalog/site-settings'),
       ]);
       const mappedProducts = productsResponse.products.map(toProduct);
       const mappedBanners = bannersResponse.banners.map(toAdvertisement);
+      const mappedSections = sectionsResponse.sections.map(toSection);
       setProducts(mappedProducts.length > 0 ? mappedProducts : defaultProducts);
       setAdvertisements(mappedBanners.length > 0 ? mappedBanners : defaultAdvertisements);
+      setSections(mappedSections);
+      setSiteSettings(toSiteSettings(settingsResponse.settings));
     } catch {
       setProducts(defaultProducts);
       setAdvertisements(defaultAdvertisements);
+      setSections(defaultSections);
+      setSiteSettings(defaultSiteSettings);
     } finally {
       setLoading(false);
     }
@@ -132,11 +176,56 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     setAdvertisements((previous) => previous.filter((ad) => ad.id !== advertisementId));
   };
 
+  const addSection = async (section: Omit<Section, 'id'>) => {
+    const token = getToken();
+    const response = await apiRequest<{ section: any }>('/catalog/sections', {
+      method: 'POST',
+      token,
+      body: {
+        ...section,
+        productIds: section.productIds.map((product) => product.id),
+      },
+    });
+    setSections((previous) => [toSection(response.section), ...previous]);
+  };
+
+  const updateSection = async (sectionId: string, changes: Partial<Section>) => {
+    const token = getToken();
+    const response = await apiRequest<{ section: any }>(`/catalog/sections/${sectionId}`, {
+      method: 'PATCH',
+      token,
+      body: {
+        ...changes,
+        productIds: changes.productIds?.map((product) => product.id),
+      },
+    });
+    const next = toSection(response.section);
+    setSections((previous) => previous.map((section) => (section.id === sectionId ? next : section)));
+  };
+
+  const deleteSection = async (sectionId: string) => {
+    const token = getToken();
+    await apiRequest<void>(`/catalog/sections/${sectionId}`, { method: 'DELETE', token });
+    setSections((previous) => previous.filter((section) => section.id !== sectionId));
+  };
+
+  const updateSiteSettings = async (changes: Partial<SiteSettings>) => {
+    const token = getToken();
+    const response = await apiRequest<{ settings: any }>('/catalog/site-settings', {
+      method: 'PATCH',
+      token,
+      body: changes,
+    });
+    setSiteSettings(toSiteSettings(response.settings));
+  };
+
   return (
     <CatalogContext.Provider
       value={{
         products,
         advertisements,
+        sections,
+        siteSettings,
         loading,
         addProduct,
         updateProduct,
@@ -144,6 +233,10 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
         addAdvertisement,
         updateAdvertisement,
         deleteAdvertisement,
+        addSection,
+        updateSection,
+        deleteSection,
+        updateSiteSettings,
         refreshCatalog,
       }}
     >

@@ -1,0 +1,180 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String    @id @default(cuid())
+  name         String
+  email        String    @unique
+  passwordHash String
+  role         String    @default("customer")
+  carts        Cart[]
+  orders       Order[]
+  inventoryLog InventoryLog[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  description String   @default("")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Product {
+  id               String             @id @default(cuid())
+  name             String
+  category         String
+  price            Float
+  rating           Float              @default(4.5)
+  stockSold        Int                @default(0)
+  availableStock   Int
+  images           Json
+  description      String
+  tags             Json
+  season           String?
+  isNewArrival     Boolean            @default(false)
+  isTrending       Boolean            @default(false)
+  isBudgetFriendly Boolean            @default(false)
+  isMostSearched   Boolean            @default(false)
+  cartItems        CartItem[]
+  orderItems       OrderItem[]
+  sectionLinks     SectionProduct[]
+  inventoryLog     InventoryLog[]
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+}
+
+model Banner {
+  id        String   @id @default(cuid())
+  title     String
+  subtitle  String   @default("")
+  image     String
+  cta       String   @default("Shop Now")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Section {
+  id             String           @id @default(cuid())
+  name           String
+  slug           String           @unique
+  description    String           @default("")
+  image          String           @default("")
+  showInHeader   Boolean          @default(true)
+  showInHomepage Boolean          @default(true)
+  isActive       Boolean          @default(true)
+  sortOrder      Int              @default(0)
+  products       SectionProduct[]
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+}
+
+model SectionProduct {
+  sectionId  String
+  productId  String
+  section    Section  @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@id([sectionId, productId])
+}
+
+model SiteSettings {
+  id             String   @id @default(cuid())
+  key            String   @unique @default("primary")
+  headerDealsImage String @default("")
+  headerDealsText  String @default("Hot deals live now")
+  footerText       String @default("Your one-stop destination for premium shoes and shirts. Quality products at unbeatable prices.")
+  footerLinks      Json
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Cart {
+  id        String     @id @default(cuid())
+  userId    String
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     CartItem[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@unique([userId])
+}
+
+model CartItem {
+  id        String   @id @default(cuid())
+  cartId    String
+  productId String
+  quantity  Int
+  cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Order {
+  id                String      @id @default(cuid())
+  userId            String
+  user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items             OrderItem[]
+  shippingAddress   Json
+  subtotal          Float
+  tax               Float
+  total             Float
+  paymentMethod     String
+  paymentStatus     String      @default("pending")
+  orderStatus       String      @default("pending")
+  razorpayOrderId   String?     @unique
+  razorpayPaymentId String?
+  payments          Payment[]
+  inventoryLog      InventoryLog[]
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+}
+
+model OrderItem {
+  id        String   @id @default(cuid())
+  orderId   String
+  productId String
+  name      String
+  image     String   @default("")
+  quantity  Int
+  unitPrice Float
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Restrict)
+}
+
+model InventoryLog {
+  id        String   @id @default(cuid())
+  productId String
+  delta     Int
+  reason    String
+  orderId   String?
+  createdBy String?
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  order     Order?   @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  user      User?    @relation(fields: [createdBy], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+}
+
+model Payment {
+  id                String   @id @default(cuid())
+  orderId           String
+  provider          String   @default("razorpay")
+  providerOrderId   String?
+  providerPaymentId String?
+  amount            Float
+  status            String   @default("created")
+  order             Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}

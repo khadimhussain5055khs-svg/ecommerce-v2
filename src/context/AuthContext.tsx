@@ -13,6 +13,11 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string, name: string) => Promise<void>;
   logout: () => void;
+  updateCredentials: (payload: {
+    currentPassword: string;
+    email?: string;
+    newPassword?: string;
+  }) => Promise<void>;
   isAuthenticated: boolean;
   isAdmin: boolean;
 }
@@ -63,6 +68,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem(TOKEN_STORAGE_KEY);
   };
 
+  const updateCredentials = async (payload: {
+    currentPassword: string;
+    email?: string;
+    newPassword?: string;
+  }) => {
+    if (!token) throw new Error('Not authenticated');
+    const response = await apiRequest<{ user: User }>('/auth/credentials', {
+      method: 'PATCH',
+      token,
+      body: payload,
+    });
+    setUser(response.user);
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -70,6 +89,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         login,
         signup,
         logout,
+        updateCredentials,
         isAuthenticated: !!token && !!user,
         isAdmin: user?.role === 'admin' || user?.role === 'owner',
       }}
