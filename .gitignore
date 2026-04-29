@@ -25,7 +25,3 @@ pnpm-debug.log*
 Thumbs.db
 .vscode/
 
-node_modules/
-.env
-node_modules/
-.env
