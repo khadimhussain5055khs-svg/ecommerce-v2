@@ -93,17 +93,44 @@ npm run backend:start
 
 ## Deploy Guide (GitHub Ready)
 
-### Frontend (Vercel or Netlify)
+### Frontend on Vercel
+- Import this repo into Vercel.
+- Root directory: `/`
+- Framework preset: `Vite` (or `React` if you want)
 - Build command: `npm run build`
-- Publish directory: `dist`
-- Set env var:
+- Output directory: `dist`
+- Environment variable:
   - `VITE_API_URL=https://<your-backend-domain>/api/v1`
 
-### Backend (Render or Railway)
+> The frontend uses `import.meta.env.VITE_API_URL` and falls back to `/api/v1` if not set.
+
+### Backend on Render
+- Add a new Web Service from this repo.
 - Root directory: `backend`
-- Start command: `npm start`
-- Required env vars: use `backend/.env.example`
-- MongoDB: use MongoDB Atlas connection string
+- Environment: `Node`
+- Build command: `cd backend && npm install && npm run prisma:generate`
+- Start command: `cd backend && npm start`
+- Environment variables: use `backend/.env.example` as a template.
+  - `DATABASE_URL`
+  - `JWT_SECRET`
+  - `JWT_EXPIRES_IN`
+  - `FRONTEND_URL`
+  - `OWNER_EMAIL`
+  - `OWNER_PASSWORD`
+  - `OWNER_NAME`
+  - `RAZORPAY_KEY_ID`
+  - `RAZORPAY_KEY_SECRET`
+
+### Database on Railway
+- Create a new Railway project and add a MySQL plugin.
+- Copy the generated `DATABASE_URL` and add it to Render as an env var.
+- If you prefer PostgreSQL, update `DATABASE_URL` to use the correct Prisma provider.
+
+### Notes
+- `FRONTEND_URL` on the backend should be the deployed Vercel URL.
+- `VITE_API_URL` on Vercel should point to the Render backend URL plus `/api/v1`.
+- `render.yaml` is included for Render service-as-code.
+- `vercel.json` is included for Vercel SPA routing.
 
 ### CI
 

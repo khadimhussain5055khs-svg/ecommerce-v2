@@ -65,6 +65,7 @@ async function getOrCreateSettings() {
 
 router.get('/products', async (_req, res) => {
   const products = await prisma.product.findMany({ orderBy: { createdAt: 'desc' } });
+  console.log(`GET /catalog/products returned ${products.length} products`);
   return res.json({ products });
 });
 
@@ -117,6 +118,7 @@ router.post('/products', authRequired, requireRole('admin', 'owner'), async (req
       tags: payload.tags ?? [],
     },
   });
+  console.log(`POST /catalog/products created product id=${product.id} name=${product.name}`);
   return res.status(201).json({ product });
 });
 
