@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import type { Advertisement, Product, Section } from '../data/products';
 import { apiRequest } from '../lib/api';
 import { formatPKR } from '../lib/currency';
+import { uploadImageToCloudinary } from '../lib/uploadImage';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 
 const emptyProduct: Omit<Product, 'id'> = {
@@ -42,13 +43,6 @@ const emptySection: Omit<Section, 'id'> = {
   productIds: [],
 };
 
-const readFileAsDataUrl = (file: File) =>
-  new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result));
-    reader.onerror = () => reject(new Error('Could not read file'));
-    reader.readAsDataURL(file);
-  });
 
 export function AdminDashboardPage() {
   const {
@@ -135,8 +129,14 @@ export function AdminDashboardPage() {
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>, onReady: (image: string) => void) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    const image = await readFileAsDataUrl(file);
-    onReady(image);
+    try {
+      setMessage('Uploading image...');
+      const url = await uploadImageToCloudinary(file);
+      onReady(url);
+      setMessage('Image uploaded successfully.');
+    } catch (error: any) {
+      setMessage(error?.message ?? 'Image upload failed.');
+    }
   };
 
   const toggleProductInSection = (product: Product) => {
