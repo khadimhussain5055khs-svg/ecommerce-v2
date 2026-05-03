@@ -117,17 +117,19 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     refreshCatalog();
   }, []);
 
-  const addProduct = async (product: Omit<Product, 'id'>) => {
-    const token = getToken();
-    if (!token) throw new Error('You are not logged in. Please log in as admin and try again.');
-    const response = await apiRequest<{ product: any }>('/catalog/products', {
-      method: 'POST',
-      token,
-      body: { ...product, season: product.season ?? null },
-    });
-    // Use the server response directly — no extra refresh needed, avoids race conditions.
-    setProducts((previous) => [toProduct(response.product), ...previous]);
-  };
+ const addProduct = async (product: Omit<Product, 'id'>) => {
+  const token = getToken();
+  if (!token) throw new Error('Not logged in');
+
+  await apiRequest('/catalog/products', {
+    method: 'POST',
+    token,
+    body: { ...product, season: product.season ?? null },
+  });
+
+  // ALWAYS fetch from backend
+  await refreshCatalog();
+};
 
   const updateProduct = async (productId: string, changes: Partial<Product>) => {
     const token = getToken();
