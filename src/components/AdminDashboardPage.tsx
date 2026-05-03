@@ -77,6 +77,10 @@ export function AdminDashboardPage() {
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [credentialForm, setCredentialForm] = useState({ email: user?.email ?? '', currentPassword: '', newPassword: '' });
   const [message, setMessage] = useState('');
+  const [messageIsError, setMessageIsError] = useState(false);
+
+  const showSuccess = (msg: string) => { setMessage(msg); setMessageIsError(false); };
+  const showError = (msg: string) => { setMessage(msg); setMessageIsError(true); };
 
   useEffect(() => {
     setCredentialForm((prev) => ({ ...prev, email: user?.email ?? '' }));
@@ -122,20 +126,28 @@ export function AdminDashboardPage() {
 
   const handleCreateSection = async (event: React.FormEvent) => {
     event.preventDefault();
-    await addSection(sectionForm);
-    setSectionForm(emptySection);
-    setMessage('Section created successfully.');
+    try {
+      await addSection(sectionForm);
+      setSectionForm(emptySection);
+      showSuccess('Section created successfully.');
+    } catch (error: any) {
+      showError(error?.message ?? 'Failed to create section. Is the backend running?');
+    }
   };
 
   const handleCreateProduct = async (event: React.FormEvent) => {
     event.preventDefault();
-    await addProduct({
-      ...productForm,
-      images: productForm.images.filter(Boolean),
-      tags: productForm.tags.filter(Boolean),
-    });
-    setProductForm(emptyProduct);
-    setMessage('Product created successfully.');
+    try {
+      await addProduct({
+        ...productForm,
+        images: productForm.images.filter(Boolean),
+        tags: productForm.tags.filter(Boolean),
+      });
+      setProductForm(emptyProduct);
+      showSuccess('Product created successfully.');
+    } catch (error: any) {
+      showError(error?.message ?? 'Failed to create product. Is the backend running?');
+    }
   };
 
   const handleCreateAd = async (event: React.FormEvent) => {
@@ -143,9 +155,9 @@ export function AdminDashboardPage() {
     try {
       await addAdvertisement(adForm);
       setAdForm(emptyAd);
-      setMessage('Ad created successfully.');
+      showSuccess('Ad created successfully.');
     } catch (error: any) {
-      setMessage(error?.message ?? 'Failed to create ad');
+      showError(error?.message ?? 'Failed to create ad');
     }
   };
 
@@ -173,7 +185,7 @@ export function AdminDashboardPage() {
       <div>
         <h1 className="text-4xl font-bold">Admin Dashboard</h1>
         <p className="mt-2 text-gray-600">Control sections, header/footer, credentials, and site reports from one place.</p>
-        {message && <p className="mt-2 text-green-600">{message}</p>}
+        {message && <p className={`mt-2 ${messageIsError ? 'text-red-600' : 'text-green-600'}`}>{message}</p>}
       </div>
 
       <Tabs defaultValue="orders" className="rounded-xl border border-gray-200 bg-white p-4 md:p-6">
@@ -349,20 +361,31 @@ export function AdminDashboardPage() {
                       className="rounded-md bg-slate-900 px-3 py-2 text-white hover:bg-slate-700"
                       type="button"
                       onClick={async () => {
-                        await updateProduct(product.id, {
-                          name: draft.name,
-                          price: draft.price,
-                          availableStock: draft.availableStock,
-                          images: draft.image ? [draft.image] : [],
-                        }).catch((error) => setMessage(error?.message ?? 'Failed to update product'));
-                        setMessage('Product updated successfully.');
+                        try {
+                          await updateProduct(product.id, {
+                            name: draft.name,
+                            price: draft.price,
+                            availableStock: draft.availableStock,
+                            images: draft.image ? [draft.image] : [],
+                          });
+                          showSuccess('Product updated successfully.');
+                        } catch (error: any) {
+                          showError(error?.message ?? 'Failed to update product');
+                        }
                       }}
                     >
                       Save Product
                     </button>
                     <button
                       className="rounded-md bg-gray-900 px-3 py-2 text-white hover:bg-black"
-                      onClick={() => deleteProduct(product.id).catch((error) => setMessage(error?.message ?? 'Failed to delete product'))}
+                      onClick={async () => {
+                        try {
+                          await deleteProduct(product.id);
+                          showSuccess('Product deleted.');
+                        } catch (error: any) {
+                          showError(error?.message ?? 'Failed to delete product');
+                        }
+                      }}
                       type="button"
                     >
                       Delete Product
@@ -455,7 +478,7 @@ export function AdminDashboardPage() {
             event.preventDefault();
             await updateCredentials({ currentPassword: credentialForm.currentPassword, email: credentialForm.email, newPassword: credentialForm.newPassword || undefined });
             setCredentialForm((previous) => ({ ...previous, currentPassword: '', newPassword: '' }));
-            setMessage('Credentials updated in database.');
+            showSuccess('Credentials updated in database.');
           }}>
             <input className="rounded-md border border-gray-300 px-3 py-2 md:col-span-2" type="email" placeholder="New email" value={credentialForm.email} onChange={(event) => setCredentialForm((previous) => ({ ...previous, email: event.target.value }))} />
             <input className="rounded-md border border-gray-300 px-3 py-2" type="password" placeholder="Current password" value={credentialForm.currentPassword} onChange={(event) => setCredentialForm((previous) => ({ ...previous, currentPassword: event.target.value }))} required />

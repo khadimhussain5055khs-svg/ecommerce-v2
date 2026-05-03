@@ -104,11 +104,10 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
       setAdvertisements(mappedBanners);
       setSections(mappedSections);
       setSiteSettings(toSiteSettings(settingsResponse.settings));
-    } catch {
-      setProducts([]);
-      setAdvertisements([]);
-      setSections([]);
-      setSiteSettings(defaultSiteSettings);
+    } catch (err) {
+      // Do NOT wipe existing data on network errors — keep what we already have.
+      // Only set defaults if we have nothing at all yet.
+      console.error('refreshCatalog failed:', err);
     } finally {
       setLoading(false);
     }
@@ -120,17 +119,19 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
 
   const addProduct = async (product: Omit<Product, 'id'>) => {
     const token = getToken();
+    if (!token) throw new Error('You are not logged in. Please log in as admin and try again.');
     const response = await apiRequest<{ product: any }>('/catalog/products', {
       method: 'POST',
       token,
       body: { ...product, season: product.season ?? null },
     });
+    // Use the server response directly — no extra refresh needed, avoids race conditions.
     setProducts((previous) => [toProduct(response.product), ...previous]);
-    await refreshCatalog();
   };
 
   const updateProduct = async (productId: string, changes: Partial<Product>) => {
     const token = getToken();
+    if (!token) throw new Error('You are not logged in. Please log in as admin and try again.');
     const response = await apiRequest<{ product: any }>(`/catalog/products/${productId}`, {
       method: 'PATCH',
       token,
@@ -144,6 +145,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
 
   const deleteProduct = async (productId: string) => {
     const token = getToken();
+    if (!token) throw new Error('You are not logged in. Please log in as admin and try again.');
     await apiRequest<void>(`/catalog/products/${productId}`, { method: 'DELETE', token });
     setProducts((previous) => previous.filter((product) => product.id !== productId));
   };
