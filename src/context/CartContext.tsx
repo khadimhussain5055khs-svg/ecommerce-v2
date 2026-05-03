@@ -24,20 +24,28 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [token, setToken] = useState<string | null>(null);
 
+  const parseJsonField = (value: any, fallback: any[] = []): any[] => {
+    if (Array.isArray(value)) return value;
+    if (typeof value === 'string') {
+      try { return JSON.parse(value); } catch { return fallback; }
+    }
+    return fallback;
+  };
+
   const mapCartItems = (cartItems: any[]): CartItem[] =>
     cartItems
       .filter((entry) => entry.productId)
       .map((entry) => ({
-        id: String(entry.productId._id),
+        id: String(entry.productId._id ?? entry.productId.id),
         name: entry.productId.name,
         category: entry.productId.category,
         price: entry.productId.price,
         rating: entry.productId.rating ?? 4.5,
         stockSold: entry.productId.stockSold ?? 0,
         availableStock: entry.productId.availableStock ?? 0,
-        images: entry.productId.images ?? [],
+        images: parseJsonField(entry.productId.images),
         description: entry.productId.description ?? '',
-        tags: entry.productId.tags ?? [],
+        tags: parseJsonField(entry.productId.tags),
         season: entry.productId.season ?? undefined,
         isNewArrival: !!entry.productId.isNewArrival,
         isTrending: !!entry.productId.isTrending,

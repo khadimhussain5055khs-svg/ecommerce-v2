@@ -42,6 +42,14 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
 
   const getToken = () => localStorage.getItem(TOKEN_STORAGE_KEY);
 
+  const parseJsonField = (value: any, fallback: any[] = []): any[] => {
+    if (Array.isArray(value)) return value;
+    if (typeof value === 'string') {
+      try { return JSON.parse(value); } catch { return fallback; }
+    }
+    return fallback;
+  };
+
   const toProduct = (product: any): Product => ({
     id: String(product._id ?? product.id),
     name: product.name,
@@ -50,9 +58,9 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     rating: product.rating ?? 4.5,
     stockSold: product.stockSold ?? 0,
     availableStock: product.availableStock ?? 0,
-    images: product.images ?? [],
+    images: parseJsonField(product.images),
     description: product.description ?? '',
-    tags: product.tags ?? [],
+    tags: parseJsonField(product.tags),
     season: product.season ?? undefined,
     isNewArrival: !!product.isNewArrival,
     isTrending: !!product.isTrending,

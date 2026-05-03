@@ -63,9 +63,25 @@ async function getOrCreateSettings() {
   return prisma.siteSettings.create({ data: { key: 'primary', footerLinks: [] } });
 }
 
+function parseJson(value, fallback = []) {
+  if (Array.isArray(value)) return value;
+  if (typeof value === 'string') {
+    try { return JSON.parse(value); } catch { return fallback; }
+  }
+  return fallback;
+}
+
+function normalizeProduct(product) {
+  return {
+    ...product,
+    images: parseJson(product.images),
+    tags: parseJson(product.tags),
+  };
+}
+
 router.get('/products', async (_req, res) => {
   const products = await prisma.product.findMany({ orderBy: { createdAt: 'desc' } });
-  return res.json({ products });
+  return res.json({ products: products.map(normalizeProduct) });
 });
 
 router.get('/banners', async (_req, res) => {
@@ -117,7 +133,7 @@ router.post('/products', authRequired, requireRole('admin', 'owner'), async (req
       tags: payload.tags ?? [],
     },
   });
-  return res.status(201).json({ product });
+  return res.status(201).json({ product: normalizeProduct(product) });
 });
 
 router.patch('/products/:id', authRequired, requireRole('admin', 'owner'), async (req, res) => {
@@ -131,7 +147,7 @@ router.patch('/products/:id', authRequired, requireRole('admin', 'owner'), async
   } catch {
     return res.status(404).json({ message: 'Product not found' });
   }
-  return res.json({ product });
+  return res.json({ product: normalizeProduct(product) });
 });
 
 router.delete('/products/:id', authRequired, requireRole('admin', 'owner'), async (req, res) => {
