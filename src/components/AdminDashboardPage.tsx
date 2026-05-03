@@ -69,6 +69,7 @@ export function AdminDashboardPage() {
   } = useCatalog();
   const { user, updateCredentials } = useAuth();
   const [productForm, setProductForm] = useState(emptyProduct);
+  const [productDrafts, setProductDrafts] = useState<Record<string, { name: string; price: number; availableStock: number; image: string }>>({});
   const [adForm, setAdForm] = useState(emptyAd);
   const [sectionForm, setSectionForm] = useState(emptySection);
   const [reports, setReports] = useState<any>(null);
@@ -80,6 +81,22 @@ export function AdminDashboardPage() {
   useEffect(() => {
     setCredentialForm((prev) => ({ ...prev, email: user?.email ?? '' }));
   }, [user?.email]);
+
+  useEffect(() => {
+    setProductDrafts(
+      Object.fromEntries(
+        products.map((product) => [
+          product.id,
+          {
+            name: product.name,
+            price: product.price,
+            availableStock: product.availableStock,
+            image: product.images[0] ?? '',
+          },
+        ]),
+      ),
+    );
+  }, [products]);
 
   useEffect(() => {
     const token = localStorage.getItem('auth_token');
@@ -271,7 +288,6 @@ export function AdminDashboardPage() {
             <input className="rounded-md border border-gray-300 px-3 py-2" placeholder="Product name" value={productForm.name} onChange={(event) => setProductForm((previous) => ({ ...previous, name: event.target.value }))} required />
             <select className="rounded-md border border-gray-300 px-3 py-2" value={productForm.category} onChange={(event) => setProductForm((previous) => ({ ...previous, category: event.target.value as Product['category'] }))}>
               <option value="shoes">Shoes</option>
-              <option value="shirts">Shirts</option>
             </select>
             <input className="rounded-md border border-gray-300 px-3 py-2" type="number" min={0} step="0.01" placeholder="Price" value={productForm.price} onChange={(event) => setProductForm((previous) => ({ ...previous, price: Number(event.target.value) }))} />
             <input className="rounded-md border border-gray-300 px-3 py-2" type="number" min={0} placeholder="Available stock" value={productForm.availableStock} onChange={(event) => setProductForm((previous) => ({ ...previous, availableStock: Number(event.target.value) }))} />
@@ -282,15 +298,79 @@ export function AdminDashboardPage() {
             <button className="rounded-md bg-red-600 px-4 py-2 text-white hover:bg-red-700 md:col-span-2" type="submit">Add Product</button>
           </form>
           <div className="space-y-3">
-            {products.map((product) => (
-              <div key={product.id} className="grid grid-cols-1 gap-2 rounded-md border border-gray-200 p-3 md:grid-cols-6">
-                <input className="rounded-md border border-gray-300 px-3 py-2 md:col-span-2" value={product.name} onChange={(event) => updateProduct(product.id, { name: event.target.value }).catch(() => undefined)} />
-                <input className="rounded-md border border-gray-300 px-3 py-2" type="number" min={0} step="0.01" value={product.price} onChange={(event) => updateProduct(product.id, { price: Number(event.target.value) }).catch(() => undefined)} />
-                <input className="rounded-md border border-gray-300 px-3 py-2" type="number" min={0} value={product.availableStock} onChange={(event) => updateProduct(product.id, { availableStock: Number(event.target.value) }).catch(() => undefined)} />
-                <input className="rounded-md border border-gray-300 px-3 py-2 md:col-span-2" value={product.images[0] ?? ''} onChange={(event) => updateProduct(product.id, { images: [event.target.value] }).catch(() => undefined)} />
-                <button className="rounded-md bg-gray-900 px-3 py-2 text-white hover:bg-black md:col-span-6" onClick={() => deleteProduct(product.id).catch(() => undefined)} type="button">Delete Product</button>
-              </div>
-            ))}
+            {products.map((product) => {
+              const draft = productDrafts[product.id] ?? {
+                name: product.name,
+                price: product.price,
+                availableStock: product.availableStock,
+                image: product.images[0] ?? '',
+              };
+              return (
+                <div key={product.id} className="grid grid-cols-1 gap-2 rounded-md border border-gray-200 p-3 md:grid-cols-6">
+                  <input
+                    className="rounded-md border border-gray-300 px-3 py-2 md:col-span-2"
+                    value={draft.name}
+                    onChange={(event) => setProductDrafts((previous) => ({
+                      ...previous,
+                      [product.id]: { ...draft, name: event.target.value },
+                    }))}
+                  />
+                  <input
+                    className="rounded-md border border-gray-300 px-3 py-2"
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    value={draft.price}
+                    onChange={(event) => setProductDrafts((previous) => ({
+                      ...previous,
+                      [product.id]: { ...draft, price: Number(event.target.value) },
+                    }))}
+                  />
+                  <input
+                    className="rounded-md border border-gray-300 px-3 py-2"
+                    type="number"
+                    min={0}
+                    value={draft.availableStock}
+                    onChange={(event) => setProductDrafts((previous) => ({
+                      ...previous,
+                      [product.id]: { ...draft, availableStock: Number(event.target.value) },
+                    }))}
+                  />
+                  <input
+                    className="rounded-md border border-gray-300 px-3 py-2 md:col-span-2"
+                    value={draft.image}
+                    onChange={(event) => setProductDrafts((previous) => ({
+                      ...previous,
+                      [product.id]: { ...draft, image: event.target.value },
+                    }))}
+                  />
+                  <div className="flex flex-wrap gap-2 md:col-span-6">
+                    <button
+                      className="rounded-md bg-slate-900 px-3 py-2 text-white hover:bg-slate-700"
+                      type="button"
+                      onClick={async () => {
+                        await updateProduct(product.id, {
+                          name: draft.name,
+                          price: draft.price,
+                          availableStock: draft.availableStock,
+                          images: draft.image ? [draft.image] : [],
+                        }).catch((error) => setMessage(error?.message ?? 'Failed to update product'));
+                        setMessage('Product updated successfully.');
+                      }}
+                    >
+                      Save Product
+                    </button>
+                    <button
+                      className="rounded-md bg-gray-900 px-3 py-2 text-white hover:bg-black"
+                      onClick={() => deleteProduct(product.id).catch((error) => setMessage(error?.message ?? 'Failed to delete product'))}
+                      type="button"
+                    >
+                      Delete Product
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </TabsContent>
 

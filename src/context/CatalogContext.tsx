@@ -34,9 +34,9 @@ const TOKEN_STORAGE_KEY = 'auth_token';
 const CatalogContext = createContext<CatalogContextType | undefined>(undefined);
 
 export function CatalogProvider({ children }: { children: ReactNode }) {
-  const [products, setProducts] = useState<Product[]>(defaultProducts);
-  const [advertisements, setAdvertisements] = useState<Advertisement[]>(defaultAdvertisements);
-  const [sections, setSections] = useState<Section[]>(defaultSections);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [advertisements, setAdvertisements] = useState<Advertisement[]>([]);
+  const [sections, setSections] = useState<Section[]>([]);
   const [siteSettings, setSiteSettings] = useState<SiteSettings>(defaultSiteSettings);
   const [loading, setLoading] = useState(true);
 
@@ -100,14 +100,14 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
       const mappedProducts = productsResponse.products.map(toProduct);
       const mappedBanners = bannersResponse.banners.map(toAdvertisement);
       const mappedSections = sectionsResponse.sections.map(toSection);
-      setProducts(mappedProducts.length > 0 ? mappedProducts : defaultProducts);
-      setAdvertisements(mappedBanners.length > 0 ? mappedBanners : defaultAdvertisements);
+      setProducts(mappedProducts);
+      setAdvertisements(mappedBanners);
       setSections(mappedSections);
       setSiteSettings(toSiteSettings(settingsResponse.settings));
     } catch {
-      setProducts(defaultProducts);
-      setAdvertisements(defaultAdvertisements);
-      setSections(defaultSections);
+      setProducts([]);
+      setAdvertisements([]);
+      setSections([]);
       setSiteSettings(defaultSiteSettings);
     } finally {
       setLoading(false);
