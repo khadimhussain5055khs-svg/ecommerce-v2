@@ -1,3 +1,5 @@
+import shoe1 from './assets/shoe1.jpg';
+
 export interface Product {
   id: string;
   name: string;
@@ -54,7 +56,7 @@ export const products: Product[] = [
     rating: 4.8,
     stockSold: 1250,
     availableStock: 45,
-    images: ['https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&q=80'],
+    images:   ['https://collection.cloudinary.com/dmj67cfbr/c5ca0975b9017d6892601b26c883ccccw=800&q=80'],
     description: 'Premium performance sneakers with air cushioning technology',
     tags: ['running', 'sports', 'casual'],
     season: 'spring',

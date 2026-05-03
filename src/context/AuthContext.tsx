@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
 import { apiRequest } from '../lib/api';
 
 interface User {
@@ -20,6 +20,8 @@ interface AuthContextType {
   }) => Promise<void>;
   isAuthenticated: boolean;
   isAdmin: boolean;
+  /** Registers a callback that fires after every login, signup, or logout. */
+  onAuthChange: (callback: () => void) => () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -28,6 +30,16 @@ const TOKEN_STORAGE_KEY = 'auth_token';
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  const authChangeCallbacks = useRef<Set<() => void>>(new Set());
+
+  const notifyAuthChange = () => {
+    authChangeCallbacks.current.forEach((cb) => cb());
+  };
+
+  const onAuthChange = (callback: () => void): (() => void) => {
+    authChangeCallbacks.current.add(callback);
+    return () => authChangeCallbacks.current.delete(callback);
+  };
 
   useEffect(() => {
     const savedToken = localStorage.getItem(TOKEN_STORAGE_KEY);
@@ -50,6 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(payload.user);
     setToken(payload.token);
     localStorage.setItem(TOKEN_STORAGE_KEY, payload.token);
+    notifyAuthChange();
   };
 
   const signup = async (email: string, password: string, name: string) => {
@@ -60,12 +73,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(payload.user);
     setToken(payload.token);
     localStorage.setItem(TOKEN_STORAGE_KEY, payload.token);
+    notifyAuthChange();
   };
 
   const logout = () => {
     setUser(null);
     setToken(null);
     localStorage.removeItem(TOKEN_STORAGE_KEY);
+    notifyAuthChange();
   };
 
   const updateCredentials = async (payload: {
@@ -92,6 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         updateCredentials,
         isAuthenticated: !!token && !!user,
         isAdmin: user?.role === 'admin' || user?.role === 'owner',
+        onAuthChange,
       }}
     >
       {children}

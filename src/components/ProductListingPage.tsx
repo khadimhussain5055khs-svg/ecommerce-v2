@@ -5,7 +5,7 @@ import { ProductCard } from './ProductCard';
 export function ProductListingPage() {
   const { category } = useParams();
   const [searchParams] = useSearchParams();
-  const { products } = useCatalog();
+  const { products, loading } = useCatalog();
   const filter = searchParams.get('filter');
   const search = searchParams.get('search');
 
@@ -59,6 +59,17 @@ export function ProductListingPage() {
     if (category === 'shirts') return 'Shirts';
     return 'All Products';
   };
+
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-8 flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="inline-block w-10 h-10 border-4 border-red-600 border-t-transparent rounded-full animate-spin mb-4" />
+          <p className="text-gray-500">Loading products...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
