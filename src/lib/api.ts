@@ -1,5 +1,11 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL ?? '/api/v1';
 
+if (!import.meta.env.VITE_API_URL && import.meta.env.MODE === 'production') {
+  console.warn(
+    'VITE_API_URL is not set in production. The frontend will request /api/v1 relative to the current domain. On Vercel, set VITE_API_URL to your Render backend URL.',
+  );
+}
+
 type RequestOptions = {
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   body?: unknown;

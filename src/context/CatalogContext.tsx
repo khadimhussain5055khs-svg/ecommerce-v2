@@ -126,6 +126,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
       body: { ...product, season: product.season ?? null },
     });
     setProducts((previous) => [toProduct(response.product), ...previous]);
+    await refreshCatalog();
   };
 
   const updateProduct = async (productId: string, changes: Partial<Product>) => {
