@@ -7,12 +7,12 @@ import { formatPKR } from '../lib/currency';
 
 export function CartPage() {
   const { items, removeFromCart, updateQuantity, totalPrice, totalItems } = useCart();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, openAuthModal } = useAuth();
   const navigate = useNavigate();
 
   const handleCheckout = () => {
     if (!isAuthenticated) {
-      alert('Please login to continue with checkout');
+      openAuthModal('login');
       return;
     }
     navigate('/checkout');

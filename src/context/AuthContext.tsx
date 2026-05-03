@@ -22,6 +22,10 @@ interface AuthContextType {
   isAdmin: boolean;
   /** Registers a callback that fires after every login, signup, or logout. */
   onAuthChange: (callback: () => void) => () => void;
+  isAuthModalOpen: boolean;
+  authModalView: 'login' | 'signup';
+  openAuthModal: (view?: 'login' | 'signup') => void;
+  closeAuthModal: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -30,7 +34,18 @@ const TOKEN_STORAGE_KEY = 'auth_token';
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authModalView, setAuthModalView] = useState<'login' | 'signup'>('login');
   const authChangeCallbacks = useRef<Set<() => void>>(new Set());
+
+  const openAuthModal = (view: 'login' | 'signup' = 'login') => {
+    setAuthModalView(view);
+    setIsAuthModalOpen(true);
+  };
+
+  const closeAuthModal = () => {
+    setIsAuthModalOpen(false);
+  };
 
   const notifyAuthChange = () => {
     authChangeCallbacks.current.forEach((cb) => cb());
@@ -108,6 +123,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAuthenticated: !!token && !!user,
         isAdmin: user?.role === 'admin' || user?.role === 'owner',
         onAuthChange,
+        isAuthModalOpen,
+        authModalView,
+        openAuthModal,
+        closeAuthModal,
       }}
     >
       {children}
