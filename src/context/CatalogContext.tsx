@@ -1,10 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { useAuth } from './AuthContext';
 import {
-  advertisements as defaultAdvertisements,
-  defaultSections,
   defaultSiteSettings,
-  products as defaultProducts,
   type Advertisement,
   type Product,
   type Section,
@@ -106,11 +103,8 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
       setAdvertisements(mappedBanners);
       setSections(mappedSections);
       setSiteSettings(toSiteSettings(settingsResponse.settings));
-    } catch {
-      setProducts(defaultProducts);
-      setAdvertisements(defaultAdvertisements);
-      setSections(defaultSections);
-      setSiteSettings(defaultSiteSettings);
+    } catch (error) {
+      console.error('Failed to refresh catalog:', error);
     } finally {
       setLoading(false);
     }
@@ -120,6 +114,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     refreshCatalog();
     // Re-fetch catalog whenever user logs in or out so the product list
     // is always up-to-date for the current session.
+
     const unsubscribe = onAuthChange(() => {
       refreshCatalog();
     });
