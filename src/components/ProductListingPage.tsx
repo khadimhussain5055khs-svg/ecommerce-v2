@@ -1,11 +1,11 @@
-import { useParams, useSearchParams } from 'react-router-dom';
+import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { useCatalog } from '../context/CatalogContext';
 import { ProductCard } from './ProductCard';
 
 export function ProductListingPage() {
   const { category } = useParams();
   const [searchParams] = useSearchParams();
-  const { products, loading } = useCatalog();
+  const { products, loading, error } = useCatalog();
   const filter = searchParams.get('filter');
   const search = searchParams.get('search');
 
@@ -71,6 +71,21 @@ export function ProductListingPage() {
     );
   }
 
+  if (error) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-8 flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <p className="text-5xl mb-4">⚠️</p>
+          <h2 className="text-2xl font-bold text-gray-700 mb-2">Unable to load products</h2>
+          <p className="text-gray-400 mb-6">Please check your connection and try again.</p>
+          <button onClick={() => window.location.reload()} className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition-colors">
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       <div className="mb-8">
@@ -79,9 +94,15 @@ export function ProductListingPage() {
       </div>
 
       {filteredProducts.length === 0 ? (
-        <div className="text-center py-16">
-          <p className="text-2xl text-gray-400">No products found</p>
-          <p className="text-gray-500 mt-2">Try adjusting your filters or search terms</p>
+        <div className="text-center py-24">
+          <p className="text-5xl mb-4">🛍️</p>
+          <p className="text-2xl font-bold text-gray-700 mb-2">No products found</p>
+          <p className="text-gray-400 mt-2">
+            {search ? `No results for "${search}" — try different keywords.` : 'Check back soon or browse another category.'}
+          </p>
+          <Link to="/" className="inline-block mt-6 bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition-colors">
+            Back to Home
+          </Link>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">

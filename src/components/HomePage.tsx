@@ -7,7 +7,7 @@ import { ImageWithFallback } from './figma/ImageWithFallback';
 
 export function HomePage() {
   const [currentAdIndex, setCurrentAdIndex] = useState(0);
-  const { products, advertisements, sections, loading } = useCatalog();
+  const { products, advertisements, sections, loading, error } = useCatalog();
 
   useEffect(() => {
     if (advertisements.length === 0) return;
@@ -41,6 +41,21 @@ export function HomePage() {
         <div className="text-center">
           <div className="inline-block w-10 h-10 border-4 border-red-600 border-t-transparent rounded-full animate-spin mb-4" />
           <p className="text-gray-500">Loading products...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-8 flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <p className="text-5xl mb-4">⚠️</p>
+          <h2 className="text-2xl font-bold text-gray-700 mb-2">Unable to load store</h2>
+          <p className="text-gray-400 mb-6">Please check your connection and try again.</p>
+          <button onClick={() => window.location.reload()} className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition-colors">
+            Retry
+          </button>
         </div>
       </div>
     );
@@ -99,67 +114,78 @@ export function HomePage() {
             </div>
           </>
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center bg-gray-200 text-gray-500">
-            No advertisements configured
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-red-50 to-gray-100">
+            <p className="text-4xl font-bold text-gray-300 mb-2">Welcome</p>
+            <p className="text-gray-400">Products coming soon</p>
           </div>
         )}
       </div>
 
-      <section className="mb-12">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-3xl font-bold">Most Trendy Articles</h2>
-          <span className="text-red-600 font-semibold">View All →</span>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {trendingProducts.map(product => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
-      </section>
+      {trendingProducts.length > 0 && (
+        <section className="mb-12">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-3xl font-bold">Most Trendy Articles</h2>
+            <Link to="/products/all?filter=trending" className="text-red-600 font-semibold">View All →</Link>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {trendingProducts.map(product => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        </section>
+      )}
 
-      <section className="mb-12">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-3xl font-bold">Most Searched Articles</h2>
-          <span className="text-red-600 font-semibold">View All →</span>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {mostSearchedProducts.map(product => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
-      </section>
+      {mostSearchedProducts.length > 0 && (
+        <section className="mb-12">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-3xl font-bold">Most Searched Articles</h2>
+            <Link to="/products/all?filter=searched" className="text-red-600 font-semibold">View All →</Link>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {mostSearchedProducts.map(product => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        </section>
+      )}
 
-      <section className="mb-12">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-3xl font-bold">Budget Friendly Articles</h2>
-          <span className="text-red-600 font-semibold">View All →</span>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {budgetFriendlyProducts.map(product => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
-      </section>
+      {budgetFriendlyProducts.length > 0 && (
+        <section className="mb-12">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-3xl font-bold">Budget Friendly Articles</h2>
+            <Link to="/products/all?filter=budget" className="text-red-600 font-semibold">View All →</Link>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {budgetFriendlyProducts.map(product => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        </section>
+      )}
 
-      {homepageSections.map((section) => (
+      {homepageSections.filter(s => s.productIds.length > 0).map((section) => (
         <section key={section.id} className="mb-12">
           <div className="mb-6 flex items-center justify-between">
             <h2 className="text-3xl font-bold">{section.name}</h2>
             <Link to={`/sections/${section.slug}`} className="font-semibold text-red-600">
-              View More -
+              View More →
             </Link>
           </div>
-          {section.productIds.length > 0 ? (
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              {section.productIds.slice(0, 4).map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
-          ) : (
-            <p className="text-gray-500">No products added to this section.</p>
-          )}
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {section.productIds.slice(0, 4).map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
         </section>
       ))}
+
+      {products.length === 0 && (
+        <div className="text-center py-24">
+          <p className="text-6xl mb-4">🛍️</p>
+          <h2 className="text-2xl font-bold text-gray-700 mb-2">Store Coming Soon</h2>
+          <p className="text-gray-400">Our products will be available here shortly. Check back soon!</p>
+        </div>
+      )}
     </div>
   );
 }

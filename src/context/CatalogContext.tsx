@@ -1,10 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { useAuth } from './AuthContext';
 import {
-  advertisements as defaultAdvertisements,
-  defaultSections,
   defaultSiteSettings,
-  products as defaultProducts,
   type Advertisement,
   type Product,
   type Section,
@@ -18,6 +15,7 @@ interface CatalogContextType {
   sections: Section[];
   siteSettings: SiteSettings;
   loading: boolean;
+  error: string | null;
   addProduct: (product: Omit<Product, 'id'>) => Promise<void>;
   updateProduct: (productId: string, changes: Partial<Product>) => Promise<void>;
   deleteProduct: (productId: string) => Promise<void>;
@@ -90,8 +88,11 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     footerLinks: settings?.footerLinks?.length ? settings.footerLinks : defaultSiteSettings.footerLinks,
   });
 
+  const [error, setError] = useState<string | null>(null);
+
   const refreshCatalog = async () => {
     setLoading(true);
+    setError(null);
     try {
       const [productsResponse, bannersResponse, sectionsResponse, settingsResponse] = await Promise.all([
         apiRequest<{ products: any[] }>('/catalog/products'),
@@ -106,11 +107,10 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
       setAdvertisements(mappedBanners);
       setSections(mappedSections);
       setSiteSettings(toSiteSettings(settingsResponse.settings));
-    } catch {
-      setProducts(defaultProducts);
-      setAdvertisements(defaultAdvertisements);
-      setSections(defaultSections);
-      setSiteSettings(defaultSiteSettings);
+    } catch (err) {
+      // Keep whatever was already loaded — don't replace with hardcoded data.
+      // Only set error if we have nothing loaded yet (first load failure).
+      setError(err instanceof Error ? err.message : 'Failed to load catalog');
     } finally {
       setLoading(false);
     }
@@ -236,6 +236,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
         sections,
         siteSettings,
         loading,
+        error,
         addProduct,
         updateProduct,
         deleteProduct,
