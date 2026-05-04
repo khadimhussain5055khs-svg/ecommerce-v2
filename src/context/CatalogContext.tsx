@@ -115,10 +115,9 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
       setAdvertisements(mappedBanners);
       setSections(mappedSections);
       setSiteSettings(toSiteSettings(settingsResponse.settings));
-    } catch (err) {
-      // Keep whatever was already loaded — don't replace with hardcoded data.
-      // Only set error if we have nothing loaded yet (first load failure).
-      setError(err instanceof Error ? err.message : 'Failed to load catalog');
+    } catch (error) {
+      console.error('Failed to refresh catalog:', error);
+      setError(error instanceof Error ? error.message : 'Failed to load catalog');
     } finally {
       setLoading(false);
     }
@@ -128,6 +127,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     refreshCatalog();
     // Re-fetch catalog whenever user logs in or out so the product list
     // is always up-to-date for the current session.
+
     const unsubscribe = onAuthChange(() => {
       refreshCatalog();
     });

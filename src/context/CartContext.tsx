@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Product } from '../data/products';
 import { apiRequest } from '../lib/api';
+import { useAuth } from './AuthContext';
 
 interface CartItem extends Product {
   quantity: number;
@@ -77,6 +78,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
   }, [items]);
 
+  const { onAuthChange } = useAuth();
+
   useEffect(() => {
     const refresh = async () => {
       const currentToken = localStorage.getItem(TOKEN_STORAGE_KEY);
@@ -99,6 +102,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
     };
 
     refresh();
+    
+    const unsubscribe = onAuthChange(() => {
+      refresh();
+    });
+    return unsubscribe;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 

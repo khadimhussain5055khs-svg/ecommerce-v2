@@ -1,23 +1,24 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
-interface AuthModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-}
+export function AuthModal() {
+  const { isAuthModalOpen, closeAuthModal, authModalView, login, signup } = useAuth();
+  const [isLogin, setIsLogin] = useState(authModalView === 'login');
+  
+  // Sync local isLogin state when authModalView prop changes
+  useEffect(() => {
+    setIsLogin(authModalView === 'login');
+  }, [authModalView]);
 
-export function AuthModal({ isOpen, onClose }: AuthModalProps) {
-  const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [name, setName] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login, signup } = useAuth();
 
-  if (!isOpen) return null;
+  if (!isAuthModalOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,7 +52,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
         }
         await signup(email, password, name);
       }
-      onClose();
+      closeAuthModal();
       setEmail('');
       setPassword('');
       setConfirmPassword('');
@@ -67,7 +68,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg max-w-md w-full p-6 relative">
         <button
-          onClick={onClose}
+          onClick={closeAuthModal}
           className="absolute top-4 right-4 text-gray-500 hover:text-black"
         >
           <X className="w-6 h-6" />

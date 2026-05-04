@@ -90,7 +90,9 @@ export function ProductListingPage() {
     <div className="max-w-7xl mx-auto px-4 py-8">
       <div className="mb-8">
         <h1 className="text-4xl font-bold mb-2">{getTitle()}</h1>
-        <p className="text-gray-600">{filteredProducts.length} products found</p>
+        <p className="text-gray-600">
+          {filteredProducts.length} {filteredProducts.length === 1 ? 'product' : 'products'} found
+        </p>
       </div>
 
       {filteredProducts.length === 0 ? (

@@ -8,10 +8,9 @@ import { BrandLogo } from './BrandLogo';
 import { useCatalog } from '../context/CatalogContext';
 
 export function Header() {
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const { user, logout, isAuthenticated, isAdmin } = useAuth();
+  const { user, logout, isAuthenticated, isAdmin, openAuthModal } = useAuth();
   const { totalItems } = useCart();
   const { sections, siteSettings } = useCatalog();
   const navigate = useNavigate();
@@ -78,13 +77,13 @@ export function Header() {
               ) : (
                 <>
                   <button
-                    onClick={() => setIsAuthModalOpen(true)}
+                    onClick={() => openAuthModal('login')}
                     className="rounded-md px-2 py-1 font-medium text-white/90 hover:bg-white/10 hover:text-white transition"
                   >
                     Login
                   </button>
                   <button
-                    onClick={() => setIsAuthModalOpen(true)}
+                    onClick={() => openAuthModal('signup')}
                     className="rounded-md bg-red-600 px-3 py-1.5 font-semibold text-white hover:bg-red-700 transition"
                   >
                     Sign Up
@@ -203,7 +202,7 @@ export function Header() {
         </div>
       </header>
 
-      <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
+      <AuthModal />
     </>
   );
 }
